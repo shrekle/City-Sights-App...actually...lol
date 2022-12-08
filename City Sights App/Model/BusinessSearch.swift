@@ -4,11 +4,11 @@
 //
 //  Created by adrian garcia on 11/30/22.
 //
-
+ 
 import Foundation
 
-struct businessSearch: Codable {
-    
+class businessSearch: Codable{
+   
     var businesses = [Business]()
     var total = 0
     var region = Region()

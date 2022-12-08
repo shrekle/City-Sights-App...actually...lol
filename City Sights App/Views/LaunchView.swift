@@ -6,21 +6,27 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct LaunchView: View {
+    
+    @EnvironmentObject var model: ContentModel
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+        if model.authorizationState == .denied {
+            
         }
-        .padding()
+        else if model.authorizationState == .authorizedWhenInUse || model.authorizationState == .authorizedAlways {
+            HomeView()
+        }
+        else {
+            
+        }
     }
 }
 
 struct LaunchView_Previews: PreviewProvider {
     static var previews: some View {
-        LaunchView()
+        LaunchView().environmentObject(ContentModel())
     }
 }

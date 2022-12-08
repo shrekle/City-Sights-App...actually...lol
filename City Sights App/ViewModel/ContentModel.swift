@@ -5,43 +5,41 @@
 //  Created by adrian garcia on 11/28/22.
 //
 
+import SwiftUI
 import Foundation
 import CoreLocation
 
-
-
-
-
-class ContentModel: NSObject, ObservableObject {
+class ContentModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     
-    let locationManager = CLLocationManager()
-      
+    @Published var authorizationState = CLAuthorizationStatus.notDetermined
+    
+    @Published var path = NavigationPath()
     @Published var restaurants = [Business()]
     @Published var sights = [Business()]
     
-    //***** this overrides the init from NSObject. We add super.init() to also run the init from NSObject plus add to it want we want, in this case we want to add the methods from CLLocationManagerDelegate as well, and to set the ContentModel as the delegate for  CLLocationManager()*****
+    let locationManager = CLLocationManager()
+    
+    
     override init() {
+        super.init() // init method for NSObject
         
-        // init method for NSObject
-        super.init()
         locationManager.delegate = self
-
-//        request for permission to get location
-        locationManager.requestWhenInUseAuthorization()
+        
+        locationManager.requestWhenInUseAuthorization() // this works in conjunction with the p list
         
     }
-}
-
-//MARK: - location manager delegate methods
-extension ContentModel:  CLLocationManagerDelegate {
+    
+    
+    //MARK: - location manager delegate methods
+    
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         
         if locationManager.authorizationStatus == .authorizedAlways ||
             locationManager.authorizationStatus == .authorizedWhenInUse {
             
-            //        if theres permission that get location
-                    locationManager.startUpdatingLocation()
+            locationManager.startUpdatingLocation()
+            authorizationState = locationManager.authorizationStatus
             
         } else if locationManager.authorizationStatus == .denied {
             
@@ -58,11 +56,14 @@ extension ContentModel:  CLLocationManagerDelegate {
             getBusinesses(category: Constants.sights, location: userLocation!)
         }
     }
-}
-
-
-//MARK: - Yelp API Methods
-extension ContentModel {
+    
+    //MARK: - Yelp API Methods
+    
+    func runGetBusinesses(userLocation: CLLocation) {
+        getBusinesses(category: Constants.restaurants, location: userLocation)
+        getBusinesses(category: Constants.sights, location: userLocation)
+    }
+    
     func getBusinesses(category: String, location: CLLocation) {
         
         var urlComponent = URLComponents(string: Constants.apiUrl)
@@ -70,8 +71,8 @@ extension ContentModel {
         urlComponent?.queryItems = [
             URLQueryItem(name: "longitude", value: String(location.coordinate.longitude)),
             URLQueryItem(name: "latitude", value: String(location.coordinate.latitude)),
-            URLQueryItem(name: "category", value: category),
-            URLQueryItem(name: "limit", value: "6")
+            URLQueryItem(name: "categories", value: category),
+            URLQueryItem(name: "limit", value: "10")
         ]
         
         let url = urlComponent?.url
@@ -81,26 +82,33 @@ extension ContentModel {
             request.httpMethod = "GET"
             request.addValue("Bearer \(Constants.apiKey)", forHTTPHeaderField: "Authorization")
             
-            let sess = URLSession.shared
+            let sesh = URLSession.shared
             
-            let dataTask: Void = sess.dataTask(with: request) { data, response, error in
+            let _: Void = sesh.dataTask(with: request) { data, response, error in
                 
                 if error == nil {
                     let decoder = JSONDecoder()
                     do {
                         let result = try decoder.decode(businessSearch.self, from: data!)
+                        
+                        var businesses = result.businesses
+                        businesses.sort { b1, b2 in
+                            return b1.distance ?? 0 < b2.distance ?? 0
+                        }
+                        
+                        for b in businesses {
+                            b.getImage()
+                        }
+                        
                         DispatchQueue.main.async {
-                            
                             switch category {
-                            case Constants.restaurants:
-                                self.restaurants = result.businesses
                             case Constants.sights:
-                                self.sights = result.businesses
+                                self.sights = businesses
+                            case Constants.restaurants:
+                                self.restaurants = businesses
                             default:
                                 break
                             }
-                            self.restaurants = result.businesses
-                            
                         }
                     } catch {
                         print(error)
@@ -110,3 +118,4 @@ extension ContentModel {
         }
     }
 }
+
