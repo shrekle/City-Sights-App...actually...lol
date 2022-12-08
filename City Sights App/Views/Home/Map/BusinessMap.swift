@@ -32,6 +32,8 @@ struct BusinessMap: UIViewRepresentable {
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
         
+        mapView.delegate = context.coordinator
+        
         mapView.showsUserLocation = true
         mapView.userTrackingMode = .followWithHeading
         
@@ -47,5 +49,44 @@ struct BusinessMap: UIViewRepresentable {
     
     static func dismantleUIView(_ uiView: MKMapView, coordinator: ()) {
         uiView.removeAnnotations(uiView.annotations)
+    }
+    
+    //MARK: - Coordinator class
+    func makeCoordinator() -> Coordinator {
+       return Coordinator()
+    }
+    // coordinator class has to be inside the businessMap class UIRepresentable/ parent struct
+    class Coordinator: NSObject, MKMapViewDelegate {
+        
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            
+            //to show the blue dot of the users location
+            if annotation is MKUserLocation {
+                return nil
+            }
+            
+            //check if there is a reusable annotationView first
+            var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: Constants.annotationReuseId)
+            
+            if annotationView == nil {
+                
+                // create annotationView
+                 annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: Constants.annotationReuseId)
+                
+                //properties i can set on the annotatioView that i will return
+                annotationView!.canShowCallout = true //this let you call extra information in the call out bubble, in this case a trailing accessory item
+                annotationView!.rightCalloutAccessoryView = UIButton(type: .detailDisclosure) //  this is the litle circle with the i
+                
+            } else {
+                
+                // when reusing annotation we just need to change the old annotation info with the new one coming in
+                annotationView!.annotation = annotation
+                
+            }
+           
+            // make sure to assign the delegate in makeUiView()
+            
+            return annotationView
+        }
     }
 }
