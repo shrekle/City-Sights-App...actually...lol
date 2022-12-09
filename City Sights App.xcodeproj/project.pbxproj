@@ -147,8 +147,9 @@
 		CAB990032939615F00F353E1 /* Home */ = {
 			isa = PBXGroup;
 			children = (
-				CA1E756729414D90005888E8 /* Map */,
 				CAB990062939744500F353E1 /* HomeView.swift */,
+				CA3140B2293E67D5005A1AD1 /* Detail */,
+				CA1E756729414D90005888E8 /* Map */,
 				CAB9900829397E9600F353E1 /* List */,
 			);
 			path = Home;
@@ -175,7 +176,6 @@
 				CAB9900D293A5FF900F353E1 /* BusinessSection.swift */,
 				CAB9900B293A5E4900F353E1 /* BusinessSectionheader.swift */,
 				CAB9900F293A94A000F353E1 /* BusinessRow.swift */,
-				CA3140B2293E67D5005A1AD1 /* Detail */,
 			);
 			path = List;
 			sourceTree = "<group>";
