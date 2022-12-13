@@ -13,14 +13,16 @@ struct LaunchView: View {
     @EnvironmentObject var model: ContentModel
     
     var body: some View {
-        if model.authorizationState == .denied {
-            
-        }
-        else if model.authorizationState == .authorizedWhenInUse || model.authorizationState == .authorizedAlways {
-            HomeView()
-        }
-        else {
-            
+        VStack{
+            if model.authorizationState == .notDetermined {
+                OnboardingView()
+            }
+            else if model.authorizationState == .authorizedWhenInUse || model.authorizationState == .authorizedAlways {
+                HomeView()
+            }
+            else {
+                LocationDeniedView()
+            }
         }
     }
 }

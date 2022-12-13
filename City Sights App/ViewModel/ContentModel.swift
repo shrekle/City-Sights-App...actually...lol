@@ -16,20 +16,19 @@ class ContentModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var path = NavigationPath()
     @Published var restaurants = [Business()]
     @Published var sights = [Business()]
+    @Published var placemark: CLPlacemark?
     
     let locationManager = CLLocationManager()
     
     
     override init() {
         super.init() // init method for NSObject
-        
         locationManager.delegate = self
-        
-        locationManager.requestWhenInUseAuthorization() // this works in conjunction with the p list
-        
     }
     
-    
+    func requestGeoLocationPermission() {
+        locationManager.requestWhenInUseAuthorization() // this works in conjunction with the p
+    }
     //MARK: - location manager delegate methods
     
     
@@ -42,7 +41,7 @@ class ContentModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             authorizationState = locationManager.authorizationStatus
             
         } else if locationManager.authorizationStatus == .denied {
-            
+            authorizationState = CLAuthorizationStatus.denied
         }
     }
     
@@ -54,6 +53,17 @@ class ContentModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             locationManager.stopUpdatingLocation()
             getBusinesses(category: Constants.restaurants, location: userLocation!)
             getBusinesses(category: Constants.sights, location: userLocation!)
+            
+            //this is so that you you can get the name of the city you are in base on the user coordinates
+            let geoCoder = CLGeocoder()
+            
+            geoCoder.reverseGeocodeLocation(userLocation!) { placemark, error in
+                if error == nil && placemark != nil {
+                    
+                    self.placemark = placemark?.first
+                    
+                }
+            }
         }
     }
     
@@ -72,7 +82,7 @@ class ContentModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             URLQueryItem(name: "longitude", value: String(location.coordinate.longitude)),
             URLQueryItem(name: "latitude", value: String(location.coordinate.latitude)),
             URLQueryItem(name: "categories", value: category),
-            URLQueryItem(name: "limit", value: "10")
+            URLQueryItem(name: "limit", value: "50")
         ]
         
         let url = urlComponent?.url

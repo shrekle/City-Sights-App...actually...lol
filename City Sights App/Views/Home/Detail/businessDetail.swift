@@ -9,6 +9,8 @@ import SwiftUI
 
 struct businessDetail: View {
     
+    @State private var showDirections = false
+    
     var business: Business
     
     var body: some View {
@@ -29,26 +31,28 @@ struct businessDetail: View {
                 ZStack {
                     Rectangle()
                         .frame(height: 36)
-                        .foregroundColor(business.isClosed! ? .gray:.blue)
+                        .foregroundColor(business.isClosed ?? false ? .gray:.blue)
                     
-                    Text(business.isClosed! ? "Closed":"Open")
+                    Text(business.isClosed ?? false ? "Closed":"Open")
                         .bold()
                         .foregroundColor(.white)
                 }
             } // Vstack
             
             Group {
-                Text(business.name!)
-                if business.location?.displayAdress != nil {
+                HStack {
+                    BusinessTitle(business: business)
+                        .padding()
                     
-                    ForEach(business.location!.displayAdress!, id: \.self) { displayLine in
-                        Text(displayLine)
-                    }
+                    Spacer()
+                    
+                    YelpAttribution(link: business.url!)
+                        .padding(.trailing, -20)
                 }
-                Image("regular_\(business.rating ?? 0)")
+               
                 
-                Divider()
-                
+                DashedDivider()
+
                 HStack {
                     Text("Phone:")
                         .bold()
@@ -56,8 +60,8 @@ struct businessDetail: View {
                     Spacer()
                     Link("Call", destination: URL(string: "tel:\(business.phone ?? "")")!)
                 }
-                Divider()
-                
+                DashedDivider()
+
                 HStack {
                     Text("Reviews:")
                         .bold()
@@ -66,8 +70,8 @@ struct businessDetail: View {
                     Link("Read", destination: URL(string: "\(business.url ?? "")")!)
                 }
                 
-                Divider()
-                
+                DashedDivider()
+
                 HStack {
                     Text("Website:")
                         .bold()
@@ -77,12 +81,14 @@ struct businessDetail: View {
                     Link("Visit", destination: URL(string: "\(business.url ?? "")")!)
                 }
                 
-                Divider()
-                
+                DashedDivider()
+
             } // group
-            .padding(.vertical, 5) //if you apply padding to a Group, the group will apply it to all its child views
+            .padding(.vertical, 5)
+            .padding(.horizontal)
+            
             Button {
-                
+                showDirections = true
             } label: {
                 ZStack {
                     Rectangle()
@@ -94,8 +100,11 @@ struct businessDetail: View {
                         .foregroundColor(.white)
                     
                 }
-            } // Label of Button
-            .padding(.bottom)
+            }
+            .padding([.bottom, .horizontal])
+            .sheet(isPresented: $showDirections) {
+                DirectionsView(business: business)
+            }
         }
     }
 }
